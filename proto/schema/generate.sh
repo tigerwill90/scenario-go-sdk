@@ -1,0 +1,1 @@
+protoc proto/schema/schema.proto --go_out=.

@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package value;
+
+import "google/protobuf/any.proto";
+
+option go_package = "proto/value";
+
+message Float32Value {
+    float value = 1;
+}
+
+message Int32Value {
+    int32 value = 1;
+}
+
+message StringValue {
+    string value = 1;
+}
+
+message BoolValue {
+    bool value = 1;
+}
+
+message ListValue {
+    repeated google.protobuf.Any value = 1;
+}
+
+message MapValue {
+    map<string, google.protobuf.Any> value = 1;
+}

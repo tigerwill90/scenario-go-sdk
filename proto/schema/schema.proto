@@ -1,0 +1,153 @@
+syntax = "proto3";
+
+package schema;
+
+import "google/protobuf/any.proto";
+
+option go_package = "proto/schema";
+
+// Attribute type is used to bound allowed type and provide
+// interoperability between programming language.
+enum AttributeType {
+    // basic
+    FLOAT = 0;
+    INT = 1;
+    STRING = 2;
+    BOOL = 3;
+
+    // repeated Any
+    LIST_FLOAT = 4;
+    LIST_INT = 5;
+    LIST_STRING = 6;
+    LIST_BOOL = 7;
+
+    // map<string,Any> && map<string, repeated Any>
+    MAP_FLOAT = 8;
+    MAP_INT = 9;
+    MAP_STRING = 10;
+    MAP_BOOL = 11;
+    MAP_LIST_FLOAT = 12;
+    MAP_LIST_INT = 13;
+    MAP_LIST_STRING = 14;
+    MAP_LIST_BOOL = 15;
+}
+
+message Schema {
+    message Block {
+        repeated Attribute attributes = 1;
+        repeated NestedBlock nested_blocks = 2;
+    }
+
+    message Attribute {
+        string name = 1;
+        AttributeType type = 2;
+        string description = 3;
+
+        bool required = 4;
+        bool deprecated = 5;
+        bool sensitive = 6;
+
+        bool is_mountable = 7;
+        string mount_point = 8;
+    }
+
+    message NestedBlock {
+        // Type is the name of the block.
+        string type = 1;
+
+        message Label {
+            // Labels selector is the default label selector for a nested block type when their is no value ranges.
+            // It's also help to provide meaningful diagnostics.
+            string selector = 1;
+            // Label value can be used to bound labels values and select the right dynamic block
+            // when multiple block schema can be used for a nested block type. An empty array is used
+            // when any values are allowed.
+            repeated string bounded_value = 2;
+        }
+
+        repeated Label labels = 2;
+
+        // Dynamic blocks are a list of possible block schema for a nested block type. Only one schema will be
+        // used per block. The key path is the ordered concatenation from the nested block type followed by all
+        // label(s) (selector/one of allowed value) separated by a point.
+        // It allow to load dynamically a block schema depending on the key path.
+        // Example :
+        // credentials <provider>[values_ranges:aws,gcp,azure] <method>[values_ranges:file,env] <id> {...} => key path = credentials.gcp.env.id
+        map<string,Block> dynamic_blocks = 3;
+
+        // negative number mean optional block type
+        int64 min_items = 4;
+        // negative number mean no max boundary for the block type
+        int64 max_items = 5;
+    }
+
+    // plugin schema version
+    string version = 1;
+
+    // top level block
+    Block block = 2;
+}
+
+message Config {
+    message Block {
+        repeated Attribute attributes = 1;
+        repeated NestedBlock nested_blocks = 2;
+    }
+
+    message Attribute {
+        string name = 1;
+        AttributeType type = 2;
+        google.protobuf.Any value = 3;
+
+        Range expr_range = 4;
+        Range name_range = 5;
+        Range range = 6;
+    }
+
+    message NestedBlock {
+        string type = 1;
+        message Label {
+            string selector = 1;
+            string value = 2;
+            Range range = 3;
+        }
+        repeated Label labels = 2;
+
+        Block block = 3;
+        Range def_range = 4;
+        Range type_range = 5;
+    }
+
+    // plugin schema version
+    string version = 1;
+
+    // top level block
+    Block block = 2;
+}
+
+// Range is a set of character between two positions in a file
+message Range {
+    message Pos {
+        int64 line = 1;
+        int64 column = 2;
+        int64 byte = 3;
+    }
+
+    string filename = 1;
+    Pos start = 2;
+    Pos end = 3;
+}
+
+// Diagnostic give meaningful information about config validation error
+message Diagnostic {
+    enum Severity {
+        DIAG_INVALID = 0;
+        DIAG_ERROR = 1;
+        DIAG_WARNING = 2;
+    }
+    Severity severity = 1;
+    string summary = 2;
+    string detail = 3;
+    Range subject = 4;
+    Range context = 5;
+}

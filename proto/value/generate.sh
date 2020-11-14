@@ -1,0 +1,1 @@
+protoc proto/value/value.proto --go_out=.

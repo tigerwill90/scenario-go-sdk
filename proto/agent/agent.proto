@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package agent;
+
+import "google/protobuf/any.proto";
+import "proto/schema/schema.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "proto/agent";
+
+message GetEnvironmentSchema {
+    message Response {
+        schema.Schema schema = 1;
+    }
+}
+
+message GetQuerySchema {
+    message Request {
+        string query_name = 1;
+    }
+    message Response {
+        map<string, schema.Schema> schemas = 1;
+    }
+}
+
+message ValidEnvironmentConfig {
+    message Request {
+        schema.Config config = 1;
+    }
+    message Response {
+        // opaque encoding plugin config which is passed for each rpc service
+        bytes config = 1;
+        repeated schema.Diagnostic diags = 2;
+    }
+}
+
+message ValidQueryConfig {
+    message Request {
+        string query_name = 1;
+        schema.Config config = 2;
+    }
+    message Response {
+        // opaque encoding plugin config which is passed for each rpc service
+        bytes config = 1;
+        repeated schema.Diagnostic diags = 2;
+    }
+}
+
+message Recover {
+    message Request {
+        message FileInfo {
+            string path = 1; // path in internal snapshot tree
+        }
+
+        oneof data {
+            bytes config = 1;
+            FileInfo info = 2;
+            bytes chunk = 3;
+        }
+    }
+
+    message Response {
+        string recover_error = 1;
+    }
+}
+
+message Query {
+    message Request {
+        string query_name = 1; // indicate which query the agent should perform
+        bytes envConfig = 2;
+        bytes queryConfig = 3; // pass the specific query config
+        string query_path = 4; // path in internal snapshot tree
+    }
+
+    enum ResultType {
+        // basic
+        FLOAT = 0;
+        INT = 1;
+        STRING = 2;
+
+        // repeated
+        LIST_FLOAT = 3;
+        LIST_INT = 4;
+        LIST_STRING = 5;
+
+        // map
+        MAP_FLOAT = 6;
+        MAP_INT = 7;
+        MAP_STRING = 8;
+    }
+
+    message Response {
+        ResultType type = 1;
+        google.protobuf.Any result_set = 2;
+        string query_error = 3;
+    }
+}
+
+service Plugin {
+    rpc GetEnvironmentSchema(google.protobuf.Empty) returns (GetEnvironmentSchema.Response) {}
+    rpc GetQuerySchema (GetQuerySchema.Request) returns (GetQuerySchema.Response) {}
+    rpc ValidEnvironmentConfig (ValidEnvironmentConfig.Request) returns (ValidEnvironmentConfig.Response) {}
+    rpc ValidQueryConfig (ValidQueryConfig.Request) returns (ValidQueryConfig.Response) {}
+    rpc Recover (stream Recover.Request) returns (Recover.Response) {}
+    rpc Query(Query.Request) returns (Query.Response) {}
+}
+
