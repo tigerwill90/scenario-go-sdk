@@ -1,0 +1,1 @@
+# Go sdk for creating agent plugin for [tigerwill90/scenario](https://github.com/tigerwill90/scenario)

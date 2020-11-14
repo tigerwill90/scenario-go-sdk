@@ -1,1 +1,0 @@
-protoc proto/scenario/scenario.proto --go_out=.
