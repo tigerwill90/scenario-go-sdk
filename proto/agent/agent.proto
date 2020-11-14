@@ -14,10 +14,7 @@ message GetEnvironmentSchema {
     }
 }
 
-message GetQuerySchema {
-    message Request {
-        string query_name = 1;
-    }
+message GetQuerySchemas {
     message Response {
         map<string, schema.Schema> schemas = 1;
     }
@@ -98,7 +95,7 @@ message Query {
 
 service Plugin {
     rpc GetEnvironmentSchema(google.protobuf.Empty) returns (GetEnvironmentSchema.Response) {}
-    rpc GetQuerySchema (GetQuerySchema.Request) returns (GetQuerySchema.Response) {}
+    rpc GetQuerySchemas (google.protobuf.Empty) returns (GetQuerySchemas.Response) {}
     rpc ValidEnvironmentConfig (ValidEnvironmentConfig.Request) returns (ValidEnvironmentConfig.Response) {}
     rpc ValidQueryConfig (ValidQueryConfig.Request) returns (ValidQueryConfig.Response) {}
     rpc Recover (stream Recover.Request) returns (Recover.Response) {}
