@@ -62,7 +62,7 @@ message Schema {
             // Label value can be used to bound labels values and select the right dynamic block
             // when multiple block schema can be used for a nested block type. An empty array is used
             // when any values are allowed.
-            repeated string bounded_value = 2;
+            repeated string accepted_value = 2;
         }
 
         repeated Label labels = 2;
@@ -75,10 +75,11 @@ message Schema {
         // credentials <provider>[values_ranges:aws,gcp,azure] <method>[values_ranges:file,env] <id> {...} => key path = credentials.gcp.env.id
         map<string,Block> dynamic_blocks = 3;
 
-        // negative number mean optional block type
-        int64 min_items = 4;
-        // negative number mean no max boundary for the block type
-        int64 max_items = 5;
+        // 0 mean that current nested block is optional
+        uint64 min_items = 4;
+
+        // 0 mean no limit for the current nested block
+        uint64 max_items = 5;
     }
 
     // plugin schema version
